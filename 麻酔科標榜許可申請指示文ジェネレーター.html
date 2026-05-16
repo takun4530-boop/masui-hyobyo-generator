@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>麻酔科標榜医申請 指示文ジェネレーター</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-sub: #64748b;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --warning: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    margin: 0;
+    padding: 12px;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header { max-width: 720px; margin: 0 auto 16px; }
+  h1 { font-size: 1.2rem; margin: 0 0 4px; }
+  .subtitle { color: var(--text-sub); font-size: 0.85rem; margin: 0; }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  .profile-bar {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; margin-bottom: 16px;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .profile-bar select { flex: 1; min-width: 150px; }
+  .profile-bar button { padding: 8px 12px; font-size: 0.85rem; }
+
+  details {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 12px; overflow: hidden;
+  }
+  summary {
+    padding: 14px 16px; cursor: pointer; font-weight: 600;
+    user-select: none; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to right, #f1f5f9, #ffffff);
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: "▼"; font-size: 0.7rem; color: var(--text-sub);
+    transition: transform 0.2s;
+  }
+  details[open] summary::after { transform: rotate(180deg); }
+  .section-content { padding: 16px; }
+  .fixed-info {
+    background: #ecfdf5; border-left: 3px solid var(--success);
+    padding: 8px 12px; font-size: 0.85rem; margin-bottom: 12px;
+    border-radius: 4px;
+  }
+
+  label { display: block; margin-bottom: 12px; }
+  .label-text {
+    display: block; font-size: 0.85rem; color: var(--text-sub);
+    margin-bottom: 4px; font-weight: 500;
+  }
+  .required { color: var(--danger); }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 16px; font-family: inherit; background: white;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--primary); border-color: var(--primary);
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+  .wareki-display {
+    font-size: 0.8rem; color: var(--primary);
+    margin-top: 2px; min-height: 1em;
+  }
+
+  button {
+    padding: 12px 16px; border: none; border-radius: 8px;
+    background: var(--primary); color: white; font-weight: 600;
+    cursor: pointer; font-size: 0.95rem; font-family: inherit;
+  }
+  button:hover { background: var(--primary-dark); }
+  button.secondary {
+    background: white; color: var(--text); border: 1px solid var(--border);
+  }
+  button.danger { background: var(--danger); }
+  button.danger:hover { background: #b91c1c; }
+  button.small { padding: 6px 10px; font-size: 0.85rem; }
+
+  .item-card {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; margin-bottom: 10px; background: #fafbfc;
+  }
+  .item-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .item-title { font-weight: 600; color: var(--primary); }
+  .auto-filled { background: #fef9c3 !important; }
+  .help { font-size: 0.8rem; color: var(--text-sub); margin-top: 4px; }
+  .add-btn {
+    width: 100%; background: white; color: var(--primary);
+    border: 2px dashed var(--primary); margin-top: 8px;
+  }
+  .add-btn:hover { background: #eff6ff; }
+  .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .actions {
+    position: sticky; bottom: 0;
+    background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(8px);
+    padding: 12px 0; margin-top: 16px;
+    display: flex; gap: 8px; flex-wrap: wrap; z-index: 10;
+  }
+  .actions button { flex: 1; min-width: 120px; }
+
+  #output-section {
+    display: none; background: var(--card);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-top: 16px;
+  }
+  #output-section.show { display: block; }
+  #output-text {
+    width: 100%; min-height: 300px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px; background: #f8fafc;
+  }
+  .output-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .output-actions button { flex: 1; }
+
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--success); color: white;
+    padding: 10px 20px; border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+
+  .privacy-note {
+    background: #fef3c7; border: 1px solid #fcd34d;
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 16px;
+    font-size: 0.85rem;
+  }
+
+  /* 「後で記載」チェックボックス */
+  .later-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    font-weight: normal;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+  }
+  .later-toggle:hover { background: #e2e8f0; }
+  .later-toggle input[type="checkbox"] {
+    width: auto; height: auto; margin: 0;
+    accent-color: var(--warning);
+  }
+  .later-toggle.is-checked {
+    background: #fef3c7;
+    border-color: var(--warning);
+    color: #92400e;
+  }
+  /* 「後で記載」が有効な入力欄 */
+  input.later-disabled, select.later-disabled, textarea.later-disabled {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    pointer-events: none;
+    border-color: var(--warning) !important;
+  }
+  input.later-disabled::placeholder { color: #92400e; }
+  /* 全部「後で記載」一括ボタン */
+  .later-bulk {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .later-bulk button {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    background: white;
+    color: var(--warning);
+    border: 1px solid var(--warning);
+    font-weight: 500;
+  }
+  .later-bulk button:hover { background: #fef3c7; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>麻酔科標榜医申請 指示文ジェネレーター</h1>
+    <p class="subtitle">入力内容はこの端末内のみに保存されます(サーバー送信なし)</p>
+  </header>
+
+  <div class="privacy-note">
+    🔒 個人情報は端末から外に出ません。生成された指示文をコピーし、Claude Codeに貼り付けてください。
+  </div>
+
+  <div class="profile-bar">
+    <select id="profile-select" onchange="loadProfile()"></select>
+    <button class="secondary small" onclick="saveAsProfile()">名前を付けて保存</button>
+    <button class="danger small" onclick="deleteProfile()">削除</button>
+  </div>
+
+  <div class="later-bulk">
+    <button onclick="setAllLater(true)">⚠ 全項目を「後で記載」に</button>
+    <button onclick="setAllLater(false)">✓ 全て解除</button>
+    <span class="help" style="align-self:center;">各項目の右上にあるチェックでも個別に切替可能</span>
+  </div>
+
+  <details open>
+    <summary>① 申請者情報</summary>
+    <div class="section-content">
+      <label><span class="label-text">氏名(漢字)<span class="required">*</span></span>
+        <input type="text" id="name" placeholder="山田 太郎"></label>
+      <label><span class="label-text">ふりがな<span class="required">*</span></span>
+        <input type="text" id="name_kana" placeholder="やまだ たろう"></label>
+      <label><span class="label-text">生年月日<span class="required">*</span></span>
+        <input type="date" id="birth_date" oninput="updateWareki('birth_date','birth_date_w')">
+        <div class="wareki-display" id="birth_date_w"></div></label>
+      <label><span class="label-text">医籍登録番号</span>
+        <input type="text" id="medical_license_no" placeholder="空欄可(後で記載する場合)">
+        <div class="help">空欄の場合「【後で自分で記載】」と出力されます</div></label>
+      <label><span class="label-text">医籍登録年月日</span>
+        <input type="date" id="medical_license_date" oninput="updateWareki('medical_license_date','medical_license_date_w')">
+        <div class="wareki-display" id="medical_license_date_w"></div></label>
+      <label><span class="label-text">郵便番号</span>
+        <input type="text" id="postal_code" placeholder="100-0001" inputmode="numeric"></label>
+      <label><span class="label-text">現住所</span>
+        <input type="text" id="address" placeholder="東京都千代田区..."></label>
+      <label><span class="label-text">現住所ふりがな</span>
+        <input type="text" id="address_kana" placeholder="とうきょうとちよだく..."></label>
+      <label><span class="label-text">電話番号</span>
+        <input type="tel" id="phone" placeholder="09012345678" inputmode="numeric"></label>
+    </div>
+  </details>
+
+  <details>
+    <summary>② 申請情報</summary>
+    <div class="section-content">
+      <div class="fixed-info">📌 申請基準:基準Ⅰ(2年以上の修練)で固定</div>
+      <label><span class="label-text">申請日<span class="required">*</span></span>
+        <input type="date" id="application_date" oninput="updateWareki('application_date','application_date_w')">
+        <div class="wareki-display" id="application_date_w"></div></label>
+    </div>
+  </details>
+
+  <details>
+    <summary>③ 現在の勤務先</summary>
+    <div class="section-content">
+      <div class="fixed-info">📌 診療科名:麻酔科 / 役職:専攻医 で固定</div>
+      <label><span class="label-text">医療機関名</span>
+        <select id="current_hospital_select" onchange="onCurrentHospitalSelect()">
+          <option value="">— 一覧から選択 —</option>
+        </select>
+        <div class="help">下のリストから選ぶと、ふりがな・電話番号が自動入力されます</div></label>
+      <label><span class="label-text">医療機関名(自由入力可)</span>
+        <input type="text" id="current_hospital"></label>
+      <label><span class="label-text">医療機関名(ふりがな)</span>
+        <input type="text" id="current_hospital_kana"></label>
+      <label><span class="label-text">勤務先電話番号</span>
+        <input type="tel" id="current_hospital_phone" inputmode="tel"></label>
+    </div>
+  </details>
+
+  <details>
+    <summary>④ 略歴(大学・初期研修)</summary>
+    <div class="section-content">
+      <div class="fixed-info">📌 専攻医以降の勤務歴は「⑤麻酔科施行経験」から自動転記されます</div>
+      <label><span class="label-text">卒業大学</span>
+        <select id="graduation_school">
+          <option value="">— 全国の医学部から選択 —</option>
+        </select></label>
+      <label><span class="label-text">卒業年月</span>
+        <input type="month" id="graduation_date" oninput="updateWareki('graduation_date','graduation_date_w', true)">
+        <div class="wareki-display" id="graduation_date_w"></div></label>
+
+      <h3 style="font-size:0.95rem;margin:16px 0 8px;">初期研修(2施設まで)</h3>
+      <div id="initial-list"></div>
+      <button class="add-btn" onclick="addInitial()" id="add-initial-btn">+ 初期研修先を追加</button>
+    </div>
+  </details>
+
+  <details>
+    <summary>⑤ 麻酔科施行経験(別紙第2・施設別)</summary>
+    <div class="section-content">
+      <p class="help">麻酔研修を行った施設ごとに作成します(最大10施設)。施設名を選択すると住所・電話番号・指導者・症例数が自動入力されます。</p>
+      <div id="facility-list"></div>
+      <button class="add-btn" onclick="addFacility()" id="add-facility-btn">+ 施設を追加</button>
+    </div>
+  </details>
+
+  <div class="actions">
+    <button class="secondary" onclick="saveDraft()">💾 下書き保存</button>
+    <button class="secondary" onclick="clearForm()">🗑 全消去</button>
+    <button onclick="generatePrompt()">📋 指示文を生成</button>
+  </div>
+
+  <div id="output-section">
+    <h2 style="font-size:1rem;margin:0 0 8px;">生成された指示文</h2>
+    <textarea id="output-text" readonly></textarea>
+    <div class="output-actions">
+      <button onclick="copyOutput()">📋 クリップボードへコピー</button>
+      <button class="secondary" onclick="document.getElementById('output-section').classList.remove('show')">閉じる</button>
+    </div>
+    <div class="help" style="margin-top:8px;">
+      コピー後、MacBookのClaude Codeプロジェクトで「これを実行して」と貼り付けてください。
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ========== マスターデータ ==========
+const FACILITIES = [
+  {
+    "name": "公立大学法人 横浜市立大学附属病院",
+    "kana": "よこはましりつだいがくふぞくびょういん",
+    "postal": "236-0004",
+    "address": "横浜市金沢区福浦3-9",
+    "phone": "045-787-2918",
+    "supervisor": "後藤 隆久(2026年4月より長嶺 祐介)",
+    "program_director": "後藤 隆久(2026年4月より長嶺 祐介)",
+    "total_cases": "6113症例(2022年度)"
+  },
+  {
+    "name": "公立大学法人 横浜市立大学附属市民総合医療センター",
+    "kana": "よこはましりつだいがくふぞくしみんそうごういりょうせんたー",
+    "postal": "232-0024",
+    "address": "横浜市南区浦舟4-57",
+    "phone": "045-253-5355",
+    "supervisor": "佐藤 仁",
+    "program_director": "佐藤 仁",
+    "total_cases": "6475症例(2022年度)"
+  },
+  {
+    "name": "独立行政法人国立病院機構 横浜医療センター",
+    "kana": "よこはまいりょうせんたー",
+    "postal": "245-8575",
+    "address": "神奈川県横浜市戸塚区原宿3-60-2",
+    "phone": "045-851-2621",
+    "supervisor": "山田 宏",
+    "program_director": "山田 宏",
+    "total_cases": "3315症例(2022年度)"
+  },
+  {
+    "name": "国立研究開発法人 国立循環器病研究センター",
+    "kana": "こくりつじゅんかんきびょうけんきゅうせんたー",
+    "postal": "564-8565",
+    "address": "大阪府吹田市岸部新町6番1号",
+    "phone": "06-6170-1070",
+    "supervisor": "前田 琢磨",
+    "program_director": "前田 琢磨",
+    "total_cases": ""
+  },
+  {
+    "name": "国立研究開発法人国立成育医療研究センター",
+    "kana": "こくりつせいいくいりょうけんきゅうせんたー",
+    "postal": "157-0074",
+    "address": "東京都世田谷区大蔵2-10-1",
+    "phone": "03-3416-0181",
+    "supervisor": "糟谷 周吾",
+    "program_director": "糟谷 周吾",
+    "total_cases": "1965症例(2022年度)"
+  },
+  {
+    "name": "地方独立行政法人 神奈川県立病院機構 神奈川県立こども医療センター",
+    "kana": "かながわけんりつこどもいりょうせんたー",
+    "postal": "232-0066",
+    "address": "神奈川県横浜市南区六ツ川2-138-4",
+    "phone": "045-711-2351",
+    "supervisor": "中村 信人",
+    "program_director": "中村 信人",
+    "total_cases": "3065症例(2022年度)"
+  },
+  {
+    "name": "横須賀市立市民病院",
+    "kana": "よこすかしりつしみんびょういん",
+    "postal": "240-0195",
+    "address": "神奈川県横須賀市長坂1丁目3-2",
+    "phone": "046-856-3136",
+    "supervisor": "野瀬 浩文",
+    "program_director": "野瀬 浩文",
+    "total_cases": "1077症例(2022年度)"
+  },
+  {
+    "name": "独立行政法人 労働者健康福祉機構 横浜労災病院",
+    "kana": "よこはまろうさいびょういん",
+    "postal": "222-0036",
+    "address": "神奈川県横浜市港北区小机町3211",
+    "phone": "045-474-8111",
+    "supervisor": "越後 憲之",
+    "program_director": "越後 憲之",
+    "total_cases": "5091症例(2022年度)"
+  },
+  {
+    "name": "横浜市立脳卒中・神経脊椎センター",
+    "kana": "よこはましりつのうそっちゅうしんけいせきついせんたー",
+    "postal": "235-0012",
+    "address": "神奈川県横浜市磯子区滝頭1丁目2-1",
+    "phone": "045-753-2500",
+    "supervisor": "坂井 誠",
+    "program_director": "坂井 誠",
+    "total_cases": "778症例(2022年度)"
+  },
+  {
+    "name": "恩賜財団 済生会 横浜市南部病院",
+    "kana": "さいせいかいよこはましなんぶびょういん",
+    "postal": "234-0054",
+    "address": "神奈川県横浜市港南区港南台3丁目2-10",
+    "phone": "045-832-1111",
+    "supervisor": "横山 香織",
+    "program_director": "横山 香織",
+    "total_cases": "3564症例(2022年度)"
+  },
+  {
+    "name": "社会福祉法人聖隷福祉事業団 聖隷横浜病院",
+    "kana": "せいれいよこはまびょういん",
+    "postal": "240-0023",
+    "address": "神奈川県横浜市保土ケ谷区岩井町215",
+    "phone": "045-715-3111",
+    "supervisor": "木下 真弓",
+    "program_director": "木下 真弓",
+    "total_cases": "1373症例(2022年度)"
+  },
+  {
+    "name": "国家公務員共済組合連合会 平塚共済病院",
+    "kana": "ひらつかきょうさいびょういん",
+    "postal": "254-8502",
+    "address": "神奈川県平塚市追分9-11",
+    "phone": "0463-32-1950",
+    "supervisor": "渡邊 美佳",
+    "program_director": "渡邊 美佳",
+    "total_cases": "2436症例(2022年度)"
+  },
+  {
+    "name": "地方独立行政法人 神奈川県立病院機構 神奈川県立がんセンター",
+    "kana": "かながわけんりつがんせんたー",
+    "postal": "241-0815",
+    "address": "神奈川県横浜市旭区中尾2-3-2",
+    "phone": "045-520-2222",
+    "supervisor": "佐々木 俊郎",
+    "program_director": "佐々木 俊郎",
+    "total_cases": "3408症例(2022年度)"
+  },
+  {
+    "name": "社会医療法人財団石心会 川崎幸病院",
+    "kana": "かわさきさいわいびょういん",
+    "postal": "212-0014",
+    "address": "神奈川県川崎市幸区大宮町31-27",
+    "phone": "044-544-4611",
+    "supervisor": "高山 渉",
+    "program_director": "高山 渉",
+    "total_cases": ""
+  },
+  {
+    "name": "国際医療福祉大学 熱海病院",
+    "kana": "こくさいいりょうふくしだいがくあたみびょういん",
+    "postal": "413-0012",
+    "address": "静岡県熱海市東海岸町13-1",
+    "phone": "0557-81-9171",
+    "supervisor": "伊藤 英基",
+    "program_director": "伊藤 英基",
+    "total_cases": "1177症例(2022年度)"
+  },
+  {
+    "name": "財団法人同友会 藤沢湘南台病院",
+    "kana": "ふじさわしょうなんだいびょういん",
+    "postal": "252-0802",
+    "address": "神奈川県藤沢市高倉2345",
+    "phone": "0466-44-1451",
+    "supervisor": "原田 高志",
+    "program_director": "原田 高志",
+    "total_cases": "2233症例(2022年度)"
+  },
+  {
+    "name": "大和市立病院",
+    "kana": "やまとしりつびょういん",
+    "postal": "242-0018",
+    "address": "神奈川県大和市深見西8丁目3-6",
+    "phone": "046-260-0111",
+    "supervisor": "工藤 一大",
+    "program_director": "工藤 一大",
+    "total_cases": "2723症例(2022年度)"
+  },
+  {
+    "name": "茅ヶ崎市立病院",
+    "kana": "ちがさきしりつびょういん",
+    "postal": "253-0042",
+    "address": "神奈川県茅ヶ崎市本村5丁目15-1",
+    "phone": "0467-52-1111",
+    "supervisor": "福山 宏",
+    "program_director": "福山 宏",
+    "total_cases": "2384症例(2022年度)"
+  },
+  {
+    "name": "埼玉県立小児医療センター",
+    "kana": "さいたまけんりつしょうにいりょうせんたー",
+    "postal": "339-8551",
+    "address": "埼玉県さいたま市岩槻区大字馬込2100番地",
+    "phone": "048-758-1811",
+    "supervisor": "蔵谷 紀文",
+    "program_director": "蔵谷 紀文",
+    "total_cases": "3785症例(2022年度)"
+  },
+  {
+    "name": "医療法人社団 公仁会 大和成和病院",
+    "kana": "やまとせいわびょういん",
+    "postal": "242-0006",
+    "address": "神奈川県大和市南林間9-8-2",
+    "phone": "046-278-3911",
+    "supervisor": "米谷 聡",
+    "program_director": "米谷 聡",
+    "total_cases": "523症例(2022年度)"
+  },
+  {
+    "name": "国際医療福祉大学 三田病院",
+    "kana": "こくさいいりょうふくしだいがくみたびょういん",
+    "postal": "108-8329",
+    "address": "東京都港区三田1-4-3",
+    "phone": "03-3451-8121",
+    "supervisor": "馬場 靖子",
+    "program_director": "馬場 靖子",
+    "total_cases": "2633症例(2022年度)"
+  },
+  {
+    "name": "順天堂大学医学部附属順天堂医院",
+    "kana": "じゅんてんどうだいがくいがくぶふぞくじゅんてんどういいん",
+    "postal": "113-0033",
+    "address": "東京都文京区本郷3-1-3",
+    "phone": "03-3813-3111",
+    "supervisor": "川越 いづみ",
+    "program_director": "川越 いづみ",
+    "total_cases": "11234症例(2022年度)"
+  },
+  {
+    "name": "東京女子医科大学病院",
+    "kana": "とうきょうじょしいかだいがくびょういん",
+    "postal": "162-8666",
+    "address": "東京都新宿区河田町8-1",
+    "phone": "03-3353-8111",
+    "supervisor": "長坂 安子",
+    "program_director": "長坂 安子",
+    "total_cases": "6609症例(2022年度)"
+  },
+  {
+    "name": "国際医療福祉大学 成田病院",
+    "kana": "こくさいいりょうふくしだいがくなりたびょういん",
+    "postal": "286-0124",
+    "address": "千葉県成田市畑ヶ田852",
+    "phone": "0476-35-5600",
+    "supervisor": "稲垣 喜三",
+    "program_director": "稲垣 喜三",
+    "total_cases": "3699症例(2022年度)"
+  },
+  {
+    "name": "かわぐち心臓呼吸器病院",
+    "kana": "かわぐちしんぞうこきゅうきびょういん",
+    "postal": "333-0842",
+    "address": "埼玉県川口市前川1-1-51",
+    "phone": "048-264-5533",
+    "supervisor": "",
+    "program_director": "",
+    "total_cases": "559症例(2022年度)"
+  },
+  {
+    "name": "産業医科大学病院",
+    "kana": "さんぎょういかだいがくびょういん",
+    "postal": "807-8556",
+    "address": "北九州市八幡西区医生ヶ丘1番1号",
+    "phone": "",
+    "supervisor": "堀下 貴文",
+    "program_director": "堀下 貴文",
+    "total_cases": "5422症例(2023年度)"
+  },
+  {
+    "name": "医療法人鉄蕉会 亀田総合病院",
+    "kana": "かめだそうごうびょういん",
+    "postal": "296-8602",
+    "address": "千葉県鴨川市東町929番地",
+    "phone": "",
+    "supervisor": "植田 健一",
+    "program_director": "植田 健一",
+    "total_cases": "8279症例(2023年度)"
+  },
+  {
+    "name": "横浜市立市民病院",
+    "kana": "よこはましりつしみんびょういん",
+    "postal": "221-0855",
+    "address": "神奈川県横浜市神奈川区三ツ沢西町1番1号",
+    "phone": "045-316-4580",
+    "supervisor": "伊奈川 岳",
+    "program_director": "伊奈川 岳",
+    "total_cases": "5197症例(2022年度)"
+  },
+  {
+    "name": "国家公務員共済組合連合会 横浜南共済病院",
+    "kana": "よこはまみなみきょうさいびょういん",
+    "postal": "236-0037",
+    "address": "神奈川県横浜市金沢区六浦東1-21-1",
+    "phone": "045-782-2101",
+    "supervisor": "渡邊 至",
+    "program_director": "渡邊 至",
+    "total_cases": "4923症例(2022年度)"
+  },
+  {
+    "name": "藤沢市民病院",
+    "kana": "ふじさわしみんびょういん",
+    "postal": "251-8550",
+    "address": "神奈川県藤沢市藤沢2-6-1",
+    "phone": "0466-25-3111",
+    "supervisor": "近藤 竜也",
+    "program_director": "近藤 竜也",
+    "total_cases": "4413症例(2022年度)"
+  },
+  {
+    "name": "国家公務員共済組合連合会 横須賀共済病院",
+    "kana": "よこすかきょうさいびょういん",
+    "postal": "238-0011",
+    "address": "神奈川県横須賀市米が浜通1丁目16",
+    "phone": "046-822-2710",
+    "supervisor": "住友 正和",
+    "program_director": "住友 正和",
+    "total_cases": "5665症例(2022年度)"
+  },
+  {
+    "name": "地方独立行政法人神奈川県立病院機構 神奈川県立足柄上病院",
+    "kana": "かながわけんりつあしがらかみびょういん",
+    "postal": "258-0003",
+    "address": "神奈川県足柄上郡松田町松田惣領866-1",
+    "phone": "0465-83-0351",
+    "supervisor": "大塚 立夫",
+    "program_director": "大塚 立夫",
+    "total_cases": "1180症例(2022年度)"
+  },
+  {
+    "name": "千葉県こども病院",
+    "kana": "ちばけんこどもびょういん",
+    "postal": "266-0007",
+    "address": "千葉県千葉市緑区辺田町579-1",
+    "phone": "043-292-2111",
+    "supervisor": "原 真理子",
+    "program_director": "原 真理子",
+    "total_cases": "1551症例(2022年度)"
+  },
+  {
+    "name": "静岡県立こども病院",
+    "kana": "しずおかけんりつこどもびょういん",
+    "postal": "420-8660",
+    "address": "静岡県静岡市葵区漆山860",
+    "phone": "054-247-6251",
+    "supervisor": "奥山 克巳",
+    "program_director": "奥山 克巳",
+    "total_cases": "2861症例(2022年度)"
+  }
+];
+
+const MEDICAL_SCHOOLS = [
+  // 国立(42)
+  "旭川医科大学","北海道大学","弘前大学","東北大学","秋田大学","山形大学","福島県立医科大学",
+  "筑波大学","群馬大学","千葉大学","東京大学","東京医科歯科大学","新潟大学","富山大学","金沢大学",
+  "福井大学","山梨大学","信州大学","岐阜大学","浜松医科大学","名古屋大学","三重大学","滋賀医科大学",
+  "京都大学","大阪大学","神戸大学","鳥取大学","島根大学","岡山大学","広島大学","山口大学","徳島大学",
+  "香川大学","愛媛大学","高知大学","九州大学","佐賀大学","長崎大学","熊本大学","大分大学","宮崎大学",
+  "鹿児島大学","琉球大学",
+  // 公立(8)
+  "札幌医科大学","横浜市立大学","名古屋市立大学","京都府立医科大学","大阪公立大学","奈良県立医科大学","和歌山県立医科大学",
+  // 私立(31)
+  "岩手医科大学","自治医科大学","獨協医科大学","埼玉医科大学","国際医療福祉大学","杏林大学","慶應義塾大学",
+  "順天堂大学","昭和大学","帝京大学","東京医科大学","東京慈恵会医科大学","東京女子医科大学","東邦大学",
+  "日本大学","日本医科大学","北里大学","聖マリアンナ医科大学","東海大学","金沢医科大学","愛知医科大学",
+  "藤田医科大学","大阪医科薬科大学","関西医科大学","近畿大学","兵庫医科大学","川崎医科大学","久留米大学",
+  "産業医科大学","福岡大学","東北医科薬科大学",
+  // 防衛医科大学校
+  "防衛医科大学校"
+];
+
+const MAX_FACILITIES = 10;
+const MAX_INITIAL = 2;
+
+let initialList = [];
+let facilityList = [];
+
+// ========== 「後で記載」機能 ==========
+// keyの形式: 単一フィールドは "name", 動的アイテムは "initial.0.hospital", "facility.2.name"
+const laterSet = new Set();
+
+function isLater(key) { return laterSet.has(key); }
+function setLater(key, val) {
+  if (val) laterSet.add(key);
+  else laterSet.delete(key);
+}
+// チェックボックスを生成して入力要素のlabelに注入
+function attachLaterToggle(inputEl, key) {
+  const label = inputEl.closest('label');
+  if (!label) return;
+  // 既に注入済みなら更新のみ
+  let toggle = label.querySelector(':scope > .later-toggle');
+  if (!toggle) {
+    toggle = document.createElement('label');
+    toggle.className = 'later-toggle';
+    toggle.innerHTML = `<input type="checkbox"><span>後で記載</span>`;
+    // ラベルテキストの直後(span.label-textの後)に挿入
+    const labelText = label.querySelector(':scope > .label-text');
+    if (labelText) labelText.appendChild(toggle);
+    else label.insertBefore(toggle, label.firstChild);
+  }
+  const checkbox = toggle.querySelector('input[type="checkbox"]');
+  checkbox.checked = isLater(key);
+  toggle.classList.toggle('is-checked', checkbox.checked);
+  applyLaterStateToInput(inputEl, checkbox.checked);
+  // 重複登録防止のため一旦置換
+  const newCheckbox = checkbox.cloneNode(true);
+  checkbox.replaceWith(newCheckbox);
+  newCheckbox.addEventListener('change', () => {
+    setLater(key, newCheckbox.checked);
+    toggle.classList.toggle('is-checked', newCheckbox.checked);
+    applyLaterStateToInput(inputEl, newCheckbox.checked);
+    autoSave();
+  });
+}
+function applyLaterStateToInput(inputEl, isLaterFlag) {
+  if (isLaterFlag) {
+    inputEl.classList.add('later-disabled');
+    inputEl.setAttribute('readonly', 'readonly');
+    if (inputEl.tagName === 'SELECT') inputEl.setAttribute('disabled', 'disabled');
+  } else {
+    inputEl.classList.remove('later-disabled');
+    inputEl.removeAttribute('readonly');
+    if (inputEl.tagName === 'SELECT') inputEl.removeAttribute('disabled');
+  }
+}
+// 静的な単一フィールド一覧
+const STATIC_FIELDS = [
+  'name','name_kana','birth_date','medical_license_no','medical_license_date',
+  'postal_code','address','address_kana','phone','application_date',
+  'current_hospital','current_hospital_kana','current_hospital_phone',
+  'graduation_date','graduation_school'
+];
+function attachAllStaticToggles() {
+  STATIC_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) attachLaterToggle(el, id);
+  });
+}
+// 全項目をON/OFF
+function setAllLater(val) {
+  STATIC_FIELDS.forEach(id => setLater(id, val));
+  initialList.forEach((_, i) => {
+    ['start','end','hospital','role','employment'].forEach(k => setLater(`initial.${i}.${k}`, val));
+  });
+  facilityList.forEach((_, i) => {
+    ['name','name_kana','postal_code','address','phone','period_start','period_end',
+     'case_count','or_count','machine_count','work_hours','employment',
+     'supervisor_name','supervisor_cert_no','facility_total_cases','program_director'
+    ].forEach(k => setLater(`facility.${i}.${k}`, val));
+  });
+  attachAllStaticToggles();
+  renderInitial();
+  renderFacilities();
+  autoSave();
+  toast(val ? '全項目を「後で記載」にしました' : '全て解除しました', val ? 'var(--warning)' : 'var(--success)');
+}
+
+// ========== 和暦変換 ==========
+function toWareki(dateStr, monthOnly = false) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length < 2) return '';
+  const y = parseInt(parts[0]), m = parseInt(parts[1]), d = parts[2] ? parseInt(parts[2]) : null;
+
+  let era = '', eraYear = 0;
+  // 令和: 2019/5/1〜
+  if (y > 2019 || (y === 2019 && m >= 5)) { era = '令和'; eraYear = y - 2018; }
+  // 平成: 1989/1/8〜2019/4/30
+  else if (y > 1989 || (y === 1989 && m >= 1)) { era = '平成'; eraYear = y - 1988; }
+  // 昭和: 1926/12/25〜1989/1/7
+  else if (y >= 1926) { era = '昭和'; eraYear = y - 1925; }
+  else { return `${y}年${m}月${d ? d+'日' : ''}`; }
+
+  const eraYearStr = eraYear === 1 ? '元' : eraYear;
+  if (monthOnly || !d) {
+    return `${era}${eraYearStr}年${m}月`;
+  }
+  return `${era}${eraYearStr}年${m}月${d}日`;
+}
+
+function updateWareki(inputId, displayId, monthOnly = false) {
+  const val = document.getElementById(inputId).value;
+  const w = toWareki(val, monthOnly);
+  document.getElementById(displayId).textContent = w ? `→ ${w}` : '';
+}
+
+// ========== トースト ==========
+function toast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = color || 'var(--success)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ========== 大学・施設プルダウン初期化 ==========
+function initDropdowns() {
+  const schoolSelect = document.getElementById('graduation_school');
+  MEDICAL_SCHOOLS.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    schoolSelect.appendChild(opt);
+  });
+  const currentSelect = document.getElementById('current_hospital_select');
+  FACILITIES.forEach((f, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx; opt.textContent = f.name;
+    currentSelect.appendChild(opt);
+  });
+}
+
+function onCurrentHospitalSelect() {
+  const idx = document.getElementById('current_hospital_select').value;
+  if (idx === '') return;
+  const f = FACILITIES[parseInt(idx)];
+  document.getElementById('current_hospital').value = f.name;
+  document.getElementById('current_hospital_kana').value = f.kana;
+  document.getElementById('current_hospital_phone').value = f.phone;
+  toast('施設情報を自動入力しました');
+}
+
+// ========== 初期研修 ==========
+function addInitial(data = {}) {
+  if (initialList.length >= MAX_INITIAL) {
+    toast(`初期研修は最大${MAX_INITIAL}施設までです`, 'var(--warning)');
+    return;
+  }
+  initialList.push({
+    start: data.start || '',
+    end: data.end || '',
+    hospital: data.hospital || '',
+    role: data.role || '初期研修医',
+    employment: data.employment || '常勤'
+  });
+  renderInitial();
+}
+function removeInitial(idx) { initialList.splice(idx, 1); renderInitial(); }
+function updateInitial(idx, key, val) { initialList[idx][key] = val; }
+function renderInitial() {
+  const container = document.getElementById('initial-list');
+  container.innerHTML = '';
+  initialList.forEach((c, idx) => {
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    div.innerHTML = `
+      <div class="item-header">
+        <span class="item-title">初期研修 ${idx + 1}</span>
+        <button class="danger small" onclick="removeInitial(${idx})">削除</button>
+      </div>
+      <div class="row">
+        <label><span class="label-text">開始(年月)</span>
+          <input type="month" value="${escapeAttr(c.start)}" oninput="updateInitial(${idx}, 'start', this.value); updateMonthWareki(this, 'init_s_${idx}')">
+          <div class="wareki-display" id="init_s_${idx}"></div></label>
+        <label><span class="label-text">終了(年月)</span>
+          <input type="month" value="${escapeAttr(c.end)}" oninput="updateInitial(${idx}, 'end', this.value); updateMonthWareki(this, 'init_e_${idx}')">
+          <div class="wareki-display" id="init_e_${idx}"></div></label>
+      </div>
+      <label><span class="label-text">医療機関名</span>
+        <input type="text" value="${escapeAttr(c.hospital)}" oninput="updateInitial(${idx}, 'hospital', this.value)"></label>
+      <div class="row">
+        <label><span class="label-text">役職</span>
+          <input type="text" value="${escapeAttr(c.role)}" oninput="updateInitial(${idx}, 'role', this.value)"></label>
+        <label><span class="label-text">雇用形態</span>
+          <select onchange="updateInitial(${idx}, 'employment', this.value)">
+            <option ${c.employment === '常勤' ? 'selected' : ''}>常勤</option>
+            <option ${c.employment === '非常勤' ? 'selected' : ''}>非常勤</option>
+          </select></label>
+      </div>
+    `;
+    container.appendChild(div);
+    // 和暦表示の初期化
+    if (c.start) updateMonthWarekiById(`init_s_${idx}`, c.start);
+    if (c.end) updateMonthWarekiById(`init_e_${idx}`, c.end);
+    // 「後で記載」チェックボックスを各入力に注入
+    const inputs = div.querySelectorAll('input, select');
+    const fields = ['start','end','hospital','role','employment'];
+    inputs.forEach((el, i) => {
+      if (fields[i]) attachLaterToggle(el, `initial.${idx}.${fields[i]}`);
+    });
+  });
+  document.getElementById('add-initial-btn').disabled = initialList.length >= MAX_INITIAL;
+}
+function updateMonthWareki(inputEl, displayId) {
+  const w = toWareki(inputEl.value, true);
+  const el = document.getElementById(displayId);
+  if (el) el.textContent = w ? `→ ${w}` : '';
+}
+function updateMonthWarekiById(displayId, val) {
+  const w = toWareki(val, true);
+  const el = document.getElementById(displayId);
+  if (el) el.textContent = w ? `→ ${w}` : '';
+}
+
+// ========== 麻酔科施行経験施設 ==========
+function addFacility(data = {}) {
+  if (facilityList.length >= MAX_FACILITIES) {
+    toast(`施設は最大${MAX_FACILITIES}件までです`, 'var(--warning)');
+    return;
+  }
+  facilityList.push({
+    facility_idx: data.facility_idx ?? '', // PDF施設リストのインデックス
+    name: data.name || '',
+    name_kana: data.name_kana || '',
+    postal_code: data.postal_code || '',
+    address: data.address || '',
+    phone: data.phone || '',
+    period_start: data.period_start || '',
+    period_end: data.period_end || '',
+    case_count: data.case_count || '',
+    or_count: data.or_count || '',
+    machine_count: data.machine_count || '',
+    work_hours: data.work_hours || '40時間(8時間×週5日)',
+    employment: data.employment || '常勤',
+    supervisor_name: data.supervisor_name || '',
+    supervisor_cert_no: data.supervisor_cert_no || '',
+    facility_total_cases: data.facility_total_cases || '',
+    program_director: data.program_director || ''
+  });
+  renderFacilities();
+}
+function removeFacility(idx) { facilityList.splice(idx, 1); renderFacilities(); }
+function updateFacility(idx, key, val) { facilityList[idx][key] = val; }
+
+function onFacilitySelect(idx, selectVal) {
+  if (selectVal === '') {
+    facilityList[idx].facility_idx = '';
+    return;
+  }
+  const f = FACILITIES[parseInt(selectVal)];
+  facilityList[idx].facility_idx = parseInt(selectVal);
+  facilityList[idx].name = f.name;
+  facilityList[idx].name_kana = f.kana;
+  facilityList[idx].postal_code = f.postal;
+  facilityList[idx].address = f.address;
+  facilityList[idx].phone = f.phone;
+  facilityList[idx].supervisor_name = f.supervisor;
+  facilityList[idx].program_director = f.program_director;
+  facilityList[idx].facility_total_cases = f.total_cases;
+  renderFacilities();
+  toast('施設情報を自動入力しました');
+}
+
+function renderFacilities() {
+  const container = document.getElementById('facility-list');
+  container.innerHTML = '';
+  facilityList.forEach((f, idx) => {
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    let optionsHtml = '<option value="">— 施設を選択(自動入力) —</option>';
+    FACILITIES.forEach((fac, i) => {
+      const sel = (f.facility_idx === i) ? 'selected' : '';
+      optionsHtml += `<option value="${i}" ${sel}>${escapeAttr(fac.name)}</option>`;
+    });
+    div.innerHTML = `
+      <div class="item-header">
+        <span class="item-title">別紙第2(${idx + 1}) ${f.name ? '— ' + escapeAttr(f.name) : ''}</span>
+        <button class="danger small" onclick="removeFacility(${idx})">削除</button>
+      </div>
+
+      <label><span class="label-text">施設選択(プログラム内施設)</span>
+        <select onchange="onFacilitySelect(${idx}, this.value)">${optionsHtml}</select>
+        <div class="help">選択すると黄色の項目が自動入力されます。手動編集も可能。</div></label>
+
+      <strong style="font-size:0.85rem;">■ 施設情報</strong>
+      <label><span class="label-text">施設名</span>
+        <input type="text" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.name)}" oninput="updateFacility(${idx}, 'name', this.value); renderFacilityTitles()"></label>
+      <label><span class="label-text">施設名(ふりがな)</span>
+        <input type="text" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.name_kana)}" oninput="updateFacility(${idx}, 'name_kana', this.value)"></label>
+      <div class="row">
+        <label><span class="label-text">郵便番号</span>
+          <input type="text" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.postal_code)}" oninput="updateFacility(${idx}, 'postal_code', this.value)"></label>
+        <label><span class="label-text">電話番号</span>
+          <input type="tel" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.phone)}" oninput="updateFacility(${idx}, 'phone', this.value)"></label>
+      </div>
+      <label><span class="label-text">所在地(住所)</span>
+        <input type="text" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.address)}" oninput="updateFacility(${idx}, 'address', this.value)"></label>
+
+      <strong style="font-size:0.85rem;display:block;margin-top:8px;">■ 麻酔業務内容</strong>
+      <div class="row">
+        <label><span class="label-text">期間(開始)</span>
+          <input type="month" value="${escapeAttr(f.period_start)}" oninput="updateFacility(${idx}, 'period_start', this.value); updateMonthWareki(this, 'fac_s_${idx}')">
+          <div class="wareki-display" id="fac_s_${idx}"></div></label>
+        <label><span class="label-text">期間(終了)</span>
+          <input type="month" value="${escapeAttr(f.period_end)}" oninput="updateFacility(${idx}, 'period_end', this.value); updateMonthWareki(this, 'fac_e_${idx}')">
+          <div class="wareki-display" id="fac_e_${idx}"></div></label>
+      </div>
+      <label><span class="label-text">担当症例数</span>
+        <input type="number" value="${escapeAttr(f.case_count)}" oninput="updateFacility(${idx}, 'case_count', this.value)"></label>
+      <div class="row">
+        <label><span class="label-text">手術室数(空欄可)</span>
+          <input type="text" value="${escapeAttr(f.or_count)}" oninput="updateFacility(${idx}, 'or_count', this.value)"></label>
+        <label><span class="label-text">麻酔器台数(空欄可)</span>
+          <input type="text" value="${escapeAttr(f.machine_count)}" oninput="updateFacility(${idx}, 'machine_count', this.value)"></label>
+      </div>
+      <label><span class="label-text">週の勤務時間</span>
+        <input type="text" value="${escapeAttr(f.work_hours)}" oninput="updateFacility(${idx}, 'work_hours', this.value)"></label>
+      <label><span class="label-text">雇用形態</span>
+        <select onchange="updateFacility(${idx}, 'employment', this.value)">
+          <option ${f.employment === '常勤' ? 'selected' : ''}>常勤</option>
+          <option ${f.employment === '非常勤' ? 'selected' : ''}>非常勤</option>
+        </select></label>
+
+      <strong style="font-size:0.85rem;display:block;margin-top:8px;">■ 指導者情報</strong>
+      <label><span class="label-text">麻酔指導医氏名</span>
+        <input type="text" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.supervisor_name)}" oninput="updateFacility(${idx}, 'supervisor_name', this.value)"></label>
+      <label><span class="label-text">麻酔科指導医 認定番号(空欄可)</span>
+        <input type="text" value="${escapeAttr(f.supervisor_cert_no)}" oninput="updateFacility(${idx}, 'supervisor_cert_no', this.value)"></label>
+      <label><span class="label-text">施設麻酔科管理症例数</span>
+        <input type="text" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.facility_total_cases)}" oninput="updateFacility(${idx}, 'facility_total_cases', this.value)"></label>
+      <label><span class="label-text">研修責任者</span>
+        <input type="text" class="${f.facility_idx !== '' ? 'auto-filled' : ''}" value="${escapeAttr(f.program_director)}" oninput="updateFacility(${idx}, 'program_director', this.value)"></label>
+    `;
+    container.appendChild(div);
+    if (f.period_start) updateMonthWarekiById(`fac_s_${idx}`, f.period_start);
+    if (f.period_end) updateMonthWarekiById(`fac_e_${idx}`, f.period_end);
+    // 「後で記載」チェックボックスを注入(施設選択プルダウンは除外)
+    const inputs = div.querySelectorAll('input, select');
+    const fields = [
+      null, // 最初は施設選択select(除外)
+      'name','name_kana','postal_code','phone','address',
+      'period_start','period_end','case_count','or_count','machine_count',
+      'work_hours','employment','supervisor_name','supervisor_cert_no',
+      'facility_total_cases','program_director'
+    ];
+    inputs.forEach((el, i) => {
+      const fieldName = fields[i];
+      if (fieldName) attachLaterToggle(el, `facility.${idx}.${fieldName}`);
+    });
+  });
+  document.getElementById('add-facility-btn').disabled = facilityList.length >= MAX_FACILITIES;
+}
+function renderFacilityTitles() {
+  document.querySelectorAll('#facility-list .item-title').forEach((el, idx) => {
+    if (facilityList[idx]) {
+      el.textContent = `別紙第2(${idx + 1})${facilityList[idx].name ? ' — ' + facilityList[idx].name : ''}`;
+    }
+  });
+}
+
+// ========== ユーティリティ ==========
+function escapeAttr(s) {
+  return String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+function getValue(id) { return document.getElementById(id).value.trim(); }
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val ?? '';
+}
+function fmtOrPlaceholder(val, placeholder = '【後で自分で記載】') {
+  return val && String(val).length > 0 ? val : placeholder;
+}
+
+// ========== フォームデータ ==========
+function collectFormData() {
+  return {
+    name: getValue('name'),
+    name_kana: getValue('name_kana'),
+    birth_date: getValue('birth_date'),
+    medical_license_no: getValue('medical_license_no'),
+    medical_license_date: getValue('medical_license_date'),
+    postal_code: getValue('postal_code'),
+    address: getValue('address'),
+    address_kana: getValue('address_kana'),
+    phone: getValue('phone'),
+    application_date: getValue('application_date'),
+    current_hospital: getValue('current_hospital'),
+    current_hospital_kana: getValue('current_hospital_kana'),
+    current_hospital_phone: getValue('current_hospital_phone'),
+    graduation_date: getValue('graduation_date'),
+    graduation_school: getValue('graduation_school'),
+    initialList: initialList,
+    facilityList: facilityList,
+    laterKeys: Array.from(laterSet)
+  };
+}
+function applyFormData(data) {
+  // laterSetを先に復元(注入時にチェック状態が反映される)
+  laterSet.clear();
+  (data.laterKeys || []).forEach(k => laterSet.add(k));
+  ['name','name_kana','birth_date','medical_license_no','medical_license_date',
+   'postal_code','address','address_kana','phone','application_date',
+   'current_hospital','current_hospital_kana','current_hospital_phone',
+   'graduation_date','graduation_school'
+  ].forEach(k => setValue(k, data[k]));
+  initialList = data.initialList || [];
+  facilityList = data.facilityList || [];
+  renderInitial();
+  renderFacilities();
+  // 静的フィールドのチェックボックスを再注入
+  attachAllStaticToggles();
+  // 和暦再描画
+  ['birth_date','medical_license_date','application_date'].forEach(k => updateWareki(k, k+'_w'));
+  updateWareki('graduation_date', 'graduation_date_w', true);
+}
+
+// ========== localStorage ==========
+const DRAFT_KEY = 'anesthesia_form_draft_v2';
+const PROFILES_KEY = 'anesthesia_form_profiles_v2';
+
+function saveDraft() {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(collectFormData()));
+  toast('下書きを保存しました');
+}
+function autoSave() {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(collectFormData()));
+}
+function loadDraft() {
+  const raw = localStorage.getItem(DRAFT_KEY);
+  if (!raw) return false;
+  try { applyFormData(JSON.parse(raw)); return true; }
+  catch (e) { return false; }
+}
+function clearForm() {
+  if (!confirm('入力内容をすべて消去しますか?(プロファイルは保持)')) return;
+  localStorage.removeItem(DRAFT_KEY);
+  applyFormData({});
+  toast('消去しました');
+}
+function getProfiles() {
+  try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function setProfiles(p) { localStorage.setItem(PROFILES_KEY, JSON.stringify(p)); }
+function refreshProfileSelect() {
+  const select = document.getElementById('profile-select');
+  const profiles = getProfiles();
+  const names = Object.keys(profiles);
+  select.innerHTML = '<option value="">— 下書きを使用 —</option>' +
+    names.map(n => `<option value="${escapeAttr(n)}">${escapeAttr(n)}</option>`).join('');
+}
+function saveAsProfile() {
+  const name = prompt('プロファイル名を入力(例: 自分用、田中先生用):');
+  if (!name) return;
+  const profiles = getProfiles();
+  profiles[name] = collectFormData();
+  setProfiles(profiles);
+  refreshProfileSelect();
+  document.getElementById('profile-select').value = name;
+  toast(`「${name}」を保存しました`);
+}
+function loadProfile() {
+  const name = document.getElementById('profile-select').value;
+  if (!name) { loadDraft(); return; }
+  const profiles = getProfiles();
+  if (profiles[name]) { applyFormData(profiles[name]); toast(`「${name}」を読み込みました`); }
+}
+function deleteProfile() {
+  const name = document.getElementById('profile-select').value;
+  if (!name) { toast('プロファイルを選択してください', 'var(--warning)'); return; }
+  if (!confirm(`プロファイル「${name}」を削除しますか?`)) return;
+  const profiles = getProfiles();
+  delete profiles[name];
+  setProfiles(profiles);
+  refreshProfileSelect();
+  toast('削除しました');
+}
+
+// ========== 指示文生成 ==========
+function generatePrompt() {
+  autoSave();
+  const d = collectFormData();
+  if (!d.name && !isLater('name')) { toast('氏名は必須です(または「後で記載」)', 'var(--danger)'); return; }
+  if (d.facilityList.length === 0) {
+    if (!confirm('別紙第2(施設)が0件ですが、続行しますか?')) return;
+  }
+
+  const PLACEHOLDER = '【後で自分で記載】';
+  // 単一フィールド出力ヘルパー: 「後で記載」or 値ありで値、それ以外はプレースホルダ
+  function out(key, val, formatter) {
+    if (isLater(key)) return PLACEHOLDER;
+    const formatted = formatter ? formatter(val) : val;
+    return formatted && String(formatted).length > 0 ? formatted : PLACEHOLDER;
+  }
+  // 動的アイテム用: prefix="initial.0" or "facility.2"
+  function outItem(prefix, field, val, formatter) {
+    if (isLater(`${prefix}.${field}`)) return PLACEHOLDER;
+    const formatted = formatter ? formatter(val) : val;
+    return formatted && String(formatted).length > 0 ? formatted : '【未入力】';
+  }
+
+  // 勤務歴の組立: 初期研修 → 麻酔科施行経験施設(自動転記)
+  let careerText = '';
+  let initIdx = 1, postIdx = 1;
+  d.initialList.forEach((c, i) => {
+    const tag = `[${initIdx++}]`;
+    const start = outItem(`initial.${i}`, 'start', c.start, v => toWareki(v, true));
+    const end   = outItem(`initial.${i}`, 'end',   c.end,   v => toWareki(v, true));
+    const hosp  = outItem(`initial.${i}`, 'hospital', c.hospital);
+    const role  = outItem(`initial.${i}`, 'role', c.role || '初期研修医');
+    const emp   = outItem(`initial.${i}`, 'employment', c.employment);
+    careerText += `   ${tag} ${start} 〜 ${end} ／ ${hosp} ／ ${role} ／ ${emp}\n`;
+  });
+  d.facilityList.forEach((f, i) => {
+    const tag = `[初期研修後${postIdx++}]`;
+    const start = outItem(`facility.${i}`, 'period_start', f.period_start, v => toWareki(v, true));
+    const end   = outItem(`facility.${i}`, 'period_end',   f.period_end,   v => toWareki(v, true));
+    const name  = outItem(`facility.${i}`, 'name', f.name);
+    const emp   = outItem(`facility.${i}`, 'employment', f.employment);
+    careerText += `   ${tag} ${start} 〜 ${end} ／ ${name} ／ 麻酔科専攻医 ／ ${emp}\n`;
+  });
+  if (!careerText) careerText = '   (勤務歴未入力)\n';
+
+  // 施設別データ
+  let facilityText = '';
+  d.facilityList.forEach((f, i) => {
+    const n = i + 1;
+    const p = `facility.${i}`;
+    facilityText += `
+### 別紙第2(${n})：${outItem(p,'name',f.name)}
+
+**■ 施設情報**
+- 施設名：${outItem(p,'name',f.name)}
+- 施設名(ふりがな)：${outItem(p,'name_kana',f.name_kana)}
+- 施設所在地(郵便番号)：${outItem(p,'postal_code',f.postal_code)}
+- 施設所在地(住所)：${outItem(p,'address',f.address)}
+- 施設電話番号：${outItem(p,'phone',f.phone)}
+
+**■ 麻酔業務内容**
+- 麻酔業務期間(開始)：${outItem(p,'period_start',f.period_start, v => toWareki(v, true))}
+- 麻酔業務期間(終了)：${outItem(p,'period_end',f.period_end, v => toWareki(v, true))}
+- 担当症例数：${outItem(p,'case_count',f.case_count)}
+- 手術室数：${outItem(p,'or_count',f.or_count)}室
+- 麻酔器台数:${outItem(p,'machine_count',f.machine_count)}台
+- 週の勤務時間：${outItem(p,'work_hours',f.work_hours)}
+- 常勤/非常勤:${outItem(p,'employment',f.employment)}
+
+**■ 指導者情報**
+- 麻酔指導医氏名:${outItem(p,'supervisor_name',f.supervisor_name)}
+- 麻酔科指導医 認定番号:${outItem(p,'supervisor_cert_no',f.supervisor_cert_no)}
+- 施設麻酔科管理症例数：${outItem(p,'facility_total_cases',f.facility_total_cases)}
+- 研修責任者:${outItem(p,'program_director',f.program_director)}
+
+---
+`;
+  });
+
+  const today = (isLater('application_date') ? PLACEHOLDER : (toWareki(d.application_date) || new Date().toLocaleDateString('ja-JP')));
+  const dateForFilename = (d.application_date || new Date().toISOString().slice(0,10)).replace(/-/g,'');
+
+  const prompt = `# 麻酔科標榜医申請書類 Excel自動記入 指示文
+# 生成日時:${today}
+
+---
+
+## 【前提・ゴール】
+
+~/Desktop/麻酔科標榜医/ フォルダ内にある申請書類Excelファイルの
+全ての空欄を埋め、提出できる状態にすること。
+
+---
+
+## ステップ0:フォルダ内容を全て読み込む
+
+以下を全て読み込んでから作業を開始すること:
+
+1. Excelファイル(申請書類本体)を開きシート構成を確認する
+2. 別紙第1(麻酔科標榜許可申請書)の記入見本PDFを読む
+3. 別紙第2(麻酔施行経験証明書)の記入見本PDFを読む
+4. 申請要件が記載されたスクリーンショット画像を全て読む
+5. その他のファイルがあれば全て読む
+
+読み込み完了後、確認した内容(シート名・セル構成・必須項目)を
+箇条書きで報告してから次のステップへ進むこと。
+
+---
+
+## ステップ1:別紙第1(麻酔科標榜許可申請書)を記入する
+
+### 記入データ
+
+**■ 申請者情報**
+- 氏名(漢字)：${out('name', d.name)}
+- ふりがな:${out('name_kana', d.name_kana)}
+- 生年月日：${out('birth_date', d.birth_date, v => toWareki(v))}
+- 医籍登録番号：${out('medical_license_no', d.medical_license_no)}
+- 医籍登録年月日：${out('medical_license_date', d.medical_license_date, v => toWareki(v))}
+- 現住所(郵便番号):${out('postal_code', d.postal_code)}
+- 現住所:${out('address', d.address)}
+- 現住所ふりがな:${out('address_kana', d.address_kana)}
+- 電話番号：${out('phone', d.phone)}
+
+**■ 申請情報**
+- 申請日:${out('application_date', d.application_date, v => toWareki(v))}
+- 申請基準:基準Ⅰ(2年以上の修練)
+
+**■ 現在の勤務先**
+- 医療機関名：${out('current_hospital', d.current_hospital)}
+- 医療機関名(ふりがな):${out('current_hospital_kana', d.current_hospital_kana)}
+- 勤務先電話番号：${out('current_hospital_phone', d.current_hospital_phone)}
+- 診療科名:麻酔科
+- 役職：専攻医
+
+**■ 略歴**
+- 卒業年月：${out('graduation_date', d.graduation_date, v => toWareki(v, true))}
+- 卒業大学:${out('graduation_school', d.graduation_school)}
+
+勤務歴(全て・時系列順):
+${careerText}
+---
+
+## ステップ2:別紙第2(麻酔施行経験証明書)を施設ごとに作成する
+
+### 重要ルール
+- 麻酔研修を行った施設の数だけ別紙第2を作成すること
+- Excelの「別紙第2」シートを施設数分タブ複製し、
+  「別紙第2(1)」「別紙第2(2)」…と名前を付けること
+- 各シートに以下の施設別データを記入すること
+
+### 施設数:${d.facilityList.length}施設
+${facilityText}
+---
+
+## ステップ3:未記入・要確認項目の処理
+
+- 「【後で自分で記載】」と記載されている項目はExcelセルを**空欄のまま**にする
+- 「(検索で取得)」となっている項目は公式サイトで検索して取得し記入する
+  取得できない場合は空欄にして報告する
+- **推測で補完しない**
+- 申請書類に押印欄がある場合は空欄のままにし、「押印が必要」と報告する
+- 証明者・施設長の署名欄は空欄のままにし、「要確認」と報告する
+
+---
+
+## ステップ4:保存・最終報告
+
+1. 元ファイルはそのまま残す(上書きしない)
+2. 記入済みファイルを別名で保存する：
+   元ファイル名_記入済み_${dateForFilename}.xlsx
+3. 作業完了後、以下を報告する：
+   - ✅ 記入完了した項目の一覧(シート名・セル・記入内容)
+   - ⚠️ 空欄のまま残した項目とその理由(「後で記載」指定された項目を含む)
+   - 📋 申請に向けて必要な残作業(押印・署名・添付書類等)
+`;
+
+  document.getElementById('output-text').value = prompt;
+  document.getElementById('output-section').classList.add('show');
+  document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
+}
+
+async function copyOutput() {
+  const text = document.getElementById('output-text').value;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('✓ コピーしました');
+  } catch (e) {
+    const ta = document.getElementById('output-text');
+    ta.select();
+    document.execCommand('copy');
+    toast('✓ コピーしました');
+  }
+}
+
+// ========== 初期化 ==========
+window.addEventListener('DOMContentLoaded', () => {
+  initDropdowns();
+  refreshProfileSelect();
+  const loaded = loadDraft();
+  // loadDraftがfalse(下書きなし)の場合も静的フィールドにチェックボックスを注入
+  if (!loaded) attachAllStaticToggles();
+  let timer;
+  document.body.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(autoSave, 800);
+  });
+});
+</script>
+</body>
+</html>
